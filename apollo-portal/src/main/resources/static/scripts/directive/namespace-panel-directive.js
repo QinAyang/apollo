@@ -1,7 +1,7 @@
 directive_module.directive('apollonspanel', directive);
 
 function directive($window, $translate, toastr, AppUtil, EventManager, PermissionService, NamespaceLockService,
-    UserService, CommitService, ReleaseService, InstanceService, NamespaceBranchService, ConfigService) {
+                   UserService, CommitService, ReleaseService, InstanceService, NamespaceBranchService, ConfigService) {
     return {
         restrict: 'E',
         templateUrl: AppUtil.prefixPath() + '/views/component/namespace-panel.html',
@@ -27,7 +27,6 @@ function directive($window, $translate, toastr, AppUtil, EventManager, Permissio
             lazyLoad: "=?"
         },
         link: function (scope) {
-
             //constants
             var namespace_view_type = {
                 TEXT: 'text',
@@ -70,6 +69,88 @@ function directive($window, $translate, toastr, AppUtil, EventManager, Permissio
 
             scope.deleteNamespace = deleteNamespace;
 
+            setTimeout(function () {
+                $('#encrypt').on('hide.bs.modal', function () {
+                    $("#encryptBeforeValue").val("");
+                    $("#encryptValue").val("");
+                }).on('show.bs.modal', function () {
+                    $("#encryptBeforeValue").select().focus();
+                });
+                $('#decrypt').on('hide.bs.modal', function () {
+                    $("#decryptBeforeValue").val("");
+                    $("#decryptAfterValue").val("");
+                }).on('show.bs.modal', function () {
+                    $("#decryptBeforeValue").select().focus();
+                });
+            }, 2000);
+
+            $.ajax({
+                url: "encrypt/getKeyAppId",
+                type: "post",
+                async: false,
+                success: function (result) {
+                    if (result.success) {
+                        scope.keyAppId = result.data;
+                    }
+                }
+            });
+
+            scope.downloadKey = function () {
+                window.location.href = "encrypt/generateKey?appId=" + scope.appId;
+            }
+
+            scope.encrypt = function () {
+                AppUtil.showModal("#encrypt");
+            }
+
+            scope.decrypt = function () {
+                AppUtil.showModal("#decrypt");
+            }
+
+            scope.doEncrypt = function () {
+                if ($("#encryptBeforeValue").val() === "") {
+                    return;
+                }
+                const data = {
+                    "value": $("#encryptBeforeValue").val(),
+                    "appId": scope.appId,
+                    "env": scope.env,
+                    "cluster": scope.cluster,
+                    "namespace": scope.namespace.baseInfo.namespaceName
+                };
+                $.post("encrypt/doEncrypt", data, function (result) {
+                    if (result.success) {
+                        $("#encryptValue").val(result.data.encryptConfigValue);
+                        $("#encryptValue").select().focus();
+                    } else {
+                        $("#encryptValue").val("");
+                        alert(result.error);
+                    }
+                });
+            }
+
+            scope.doDecrypt = function () {
+                if ($("#decryptBeforeValue").val() === "") {
+                    return;
+                }
+                $.post("encrypt/doDecrypt",
+                    {
+                        "value": $("#decryptBeforeValue").val(),
+                        "appId": scope.appId,
+                        "env": scope.env,
+                        "cluster": scope.cluster,
+                        "namespace": scope.namespace.baseInfo.namespaceName
+                    },
+                    function (result) {
+                        if (result.success) {
+                            $("#decryptAfterValue").val(result.data);
+                        } else {
+                            $("#decryptAfterValue").val("");
+                            alert(result.error);
+                        }
+                    });
+            }
+
             var subscriberId = EventManager.subscribe(EventManager.EventType.UPDATE_GRAY_RELEASE_RULES,
                 function (context) {
                     useRules(context.branch);
@@ -104,7 +185,7 @@ function directive($window, $translate, toastr, AppUtil, EventManager, Permissio
 
             function refreshNamespace() {
                 EventManager.emit(EventManager.EventType.REFRESH_NAMESPACE,
-                    { namespace: scope.namespace });
+                    {namespace: scope.namespace});
             }
 
             function initNamespace(namespace, viewType) {
@@ -257,8 +338,7 @@ function directive($window, $translate, toastr, AppUtil, EventManager, Permissio
                                             namespace.branch.hasModifyPermission = result.hasPermission;
                                         }
                                     });
-                            }
-                            else {
+                            } else {
                                 //branch has same permission
                                 namespace.hasModifyPermission = result.hasPermission;
                                 if (namespace.branch) {
@@ -284,8 +364,7 @@ function directive($window, $translate, toastr, AppUtil, EventManager, Permissio
                                             namespace.branch.hasReleasePermission = result.hasPermission;
                                         }
                                     });
-                            }
-                            else {
+                            } else {
                                 //branch has same permission
                                 namespace.hasReleasePermission = result.hasPermission;
                                 if (namespace.branch) {
@@ -698,7 +777,7 @@ function directive($window, $translate, toastr, AppUtil, EventManager, Permissio
                     return false;
                 }
                 $window.location.href =
-                AppUtil.prefixPath() + "/config/sync.html?#/appid=" + scope.appId + "&env="
+                    AppUtil.prefixPath() + "/config/sync.html?#/appid=" + scope.appId + "&env="
                     + scope.env + "&clusterName="
                     + scope.cluster
                     + "&namespaceName=" + namespace.baseInfo.namespaceName;
@@ -706,7 +785,7 @@ function directive($window, $translate, toastr, AppUtil, EventManager, Permissio
 
             function goToDiffPage(namespace) {
                 $window.location.href =
-                AppUtil.prefixPath() + "/config/diff.html?#/appid=" + scope.appId + "&env="
+                    AppUtil.prefixPath() + "/config/diff.html?#/appid=" + scope.appId + "&env="
                     + scope.env + "&clusterName="
                     + scope.cluster
                     + "&namespaceName=" + namespace.baseInfo.namespaceName;
@@ -729,21 +808,21 @@ function directive($window, $translate, toastr, AppUtil, EventManager, Permissio
                     scope.cluster,
                     namespace.baseInfo.namespaceName,
                     model).then(
-                        function (result) {
-                            toastr.success($translate.instant('ApolloNsPanel.ModifiedTips'));
-                            //refresh all namespace items
-                            EventManager.emit(EventManager.EventType.REFRESH_NAMESPACE,
-                                {
-                                    namespace: namespace
-                                });
-                            return true;
+                    function (result) {
+                        toastr.success($translate.instant('ApolloNsPanel.ModifiedTips'));
+                        //refresh all namespace items
+                        EventManager.emit(EventManager.EventType.REFRESH_NAMESPACE,
+                            {
+                                namespace: namespace
+                            });
+                        return true;
 
-                        }, function (result) {
-                            toastr.error(AppUtil.errorMsg(result), $translate.instant('ApolloNsPanel.ModifyFailed'));
-                            namespace.commitChangeBtnDisabled = false;
-                            return false;
-                        }
-                    );
+                    }, function (result) {
+                        toastr.error(AppUtil.errorMsg(result), $translate.instant('ApolloNsPanel.ModifyFailed'));
+                        namespace.commitChangeBtnDisabled = false;
+                        return false;
+                    }
+                );
                 namespace.commited = true;
             }
 
@@ -758,15 +837,15 @@ function directive($window, $translate, toastr, AppUtil, EventManager, Permissio
                     scope.cluster,
                     namespace.baseInfo.namespaceName,
                     model).then(
-                        function (result) {
-                            toastr.success($translate.instant('ApolloNsPanel.GrammarIsRight'));
+                    function (result) {
+                        toastr.success($translate.instant('ApolloNsPanel.GrammarIsRight'));
 
-                        }, function (result) {
-                            EventManager.emit(EventManager.EventType.SYNTAX_CHECK_TEXT_FAILED, {
-                                syntaxCheckMessage: AppUtil.pureErrorMsg(result)
-                            });
-                        }
-                    );
+                    }, function (result) {
+                        EventManager.emit(EventManager.EventType.SYNTAX_CHECK_TEXT_FAILED, {
+                            syntaxCheckMessage: AppUtil.pureErrorMsg(result)
+                        });
+                    }
+                );
             }
 
             function goToParentAppConfigPage(namespace) {
@@ -874,16 +953,16 @@ function directive($window, $translate, toastr, AppUtil, EventManager, Permissio
                         mergeAndPublish: true
                     });
                 } else {
-                    EventManager.emit(EventManager.EventType.MERGE_AND_PUBLISH_NAMESPACE, { branch: branch });
+                    EventManager.emit(EventManager.EventType.MERGE_AND_PUBLISH_NAMESPACE, {branch: branch});
                 }
             }
 
             function rollback(namespace) {
-                EventManager.emit(EventManager.EventType.PRE_ROLLBACK_NAMESPACE, { namespace: namespace });
+                EventManager.emit(EventManager.EventType.PRE_ROLLBACK_NAMESPACE, {namespace: namespace});
             }
 
             function deleteNamespace(namespace) {
-                EventManager.emit(EventManager.EventType.PRE_DELETE_NAMESPACE, { namespace: namespace });
+                EventManager.emit(EventManager.EventType.PRE_DELETE_NAMESPACE, {namespace: namespace});
             }
 
             //theme: https://github.com/ajaxorg/ace-builds/tree/ba3b91e04a5aa559d56ac70964f9054baa0f4caf/src-min

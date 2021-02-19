@@ -17,7 +17,7 @@ logging:
 eureka:
   instance:
     hostname: ${hostname:localhost}
-    preferIpAddress: true
+    preferIpAddress: false
     status-page-url-path: /info
     health-check-url-path: /health
   server:
@@ -36,3 +36,11 @@ management:
   health:
     status:
       order: DOWN, OUT_OF_SERVICE, UNKNOWN, UP
+
+#  /******************     added by pegasus     ****************************/
+apollo:
+  encrypt:
+    app_id: ${app_id:encrypt.key}
+    private_key_name: ${private_key_name:private.key}
+    public_key_name: ${public_key_name:public.key}
+#  /******************     added by pegasus     ****************************/

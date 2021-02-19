@@ -1,0 +1,15 @@
+spring:
+  ldap:
+    base: "DC=sijibao,DC=com"
+    username: "ldap" # 配置管理员账号，用于搜索、匹配用户
+    password: "ijiP9rJ7Oe40AiXq[{ks28Xgeltsc00p"  # 配置管理员密码，用于搜索、匹配用户
+    searchFilter: "(sAMAccountName={0})"  # 用户过滤器，登录的时候用这个过滤器来搜索用户
+    urls:
+      - "ldap://ldap.sijibao.com:38900"
+
+ldap:
+  mapping: # 配置 ldap 属性
+    objectClass: "user" # ldap 用户 objectClass 配置
+    loginId: "sAMAccountName" # ldap 用户惟一 id，用来作为登录的 id
+    userDisplayName: "description" # ldap 用户名，用来作为显示名
+    email: "mail" # ldap 邮箱属性
