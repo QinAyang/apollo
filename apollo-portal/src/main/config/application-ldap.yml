@@ -1,8 +1,8 @@
 spring:
   ldap:
     base: "DC=sijibao,DC=com"
-    username: "" # 配置管理员账号，用于搜索、匹配用户
-    password: ""  # 配置管理员密码，用于搜索、匹配用户
+    username: "ldap" # 配置管理员账号，用于搜索、匹配用户
+    password: "ijiP9rJ7Oe40AiXq[{ks28Xgeltsc00p"  #
     searchFilter: "(sAMAccountName={0})"  # 用户过滤器，登录的时候用这个过滤器来搜索用户
     urls:
       - "ldap://ldap.sijibao.com:38900"
